@@ -1,4 +1,3 @@
-
 # CVE-2021-41773
 
 **Identification** : This flaw gives an attacker permission to map URLs to files outside protected directories (path traversal attack), and possibly allowing remote code execution. Can be exploited in Apache servers version 2.4.49.
@@ -7,7 +6,7 @@
 **Cataloguing**:
 - Who: Ash Daulton and the cPanel Security Team
 - When:
-    - Exploit created on 10/05/2021 
+    - Exploit created on 05/10/2021 
     - Vulnerability Reported 29/09/2021
     - Fixed at 01/10/2021
     - Update fixing it released at 04/10/2021

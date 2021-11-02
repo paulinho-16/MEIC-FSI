@@ -5,4 +5,4 @@ Breve descrição do grupo
 * Alunos:
     - André Assunção up201806140
     - Aluno2 upZZZZZ
-    - Aluno3 upZZZZZ
+    - Paulo Ribeiro up201806505

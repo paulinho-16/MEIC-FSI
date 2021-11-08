@@ -33,3 +33,13 @@
 ## Task 5:
 
 Both environment variables PATH and ANY_NAME get into the Set-UID child process. However, the variable LD_LIBRARY_PATH doesn't belong to the Set-UID child environment variables.
+
+## Task 6:
+
+As the Set-UID program does not execute /bin/ls but rather executes the ls command, it is possible to change the path so that executing ls executes a local executable file name ls rather than /bin/ls.
+Below there is a picture showing how we created a file that only root could read and how we read with a non-root user.
+The second picture shows the contents of the C file used to create the ls executable
+
+![Task 6 screenshot](images/Lab1Task6Step1.png)
+![Task 6 screenshot](images/Lab1Task6Step2.png)
+

@@ -43,6 +43,13 @@ The second picture shows the contents of the C file used to create the ls execut
 ![Task 6 screenshot](images/Lab1Task6Step1.png)
 ![Task 6 screenshot](images/Lab1Task6Step2.png)
 
+## Task 7:
+
+- Running *myprog* as a regular program and as a normal user, the sleep function is overridden from *mylib.c*, so the message is printed.
+- Running *myprog* as a Set-UID root program and as a normal user, the default sleep function is executed, because the Set-UID imposes the functions from the libraries associated to the file owner, which is the root.
+- Running *myprog* as a Set-UID root program and as a root user, the sleep function is overridden from *mylib.c*, so the message is printed. This happens because we exported the LD_PRELOAD variable as the root, and the Set-UID forces the libraries of the file owner.
+- Running *myprog* as a Set-UID user1 program, exporting the variable as user1, and running the program as user2, the default sleep function is executed, since the Set-UID imposes the file owner (user1) libraries.
+
 # Capture The Flag
 
 ## Resolução:

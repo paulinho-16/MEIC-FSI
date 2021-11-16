@@ -50,6 +50,35 @@ The second picture shows the contents of the C file used to create the ls execut
 - Running *myprog* as a Set-UID root program and as a root user, the sleep function is overridden from *mylib.c*, so the message is printed. This happens because we exported the LD_PRELOAD variable as the root, and the Set-UID forces the libraries of the file owner.
 - Running *myprog* as a Set-UID user1 program, exporting the variable as user1, and running the program as user2, the default sleep function is executed, since the Set-UID imposes the file owner (user1) libraries.
 
+## Task 8:
+
+**Step 1** - Yes, it is possible by concatenating commands in order to activate bash, using "**;**". For example, if Bob wants to consult *file*, and to remove the file *important*, he can just use:
+
+```bash
+catall "file; /bin/sh"
+$ rm important
+```
+
+Bash will be activated no matter the first command runs successfully or not.
+
+**Step 2** - No, the previous attack doesn't work, since it displays:
+
+```bash
+/bin/cat: 'file; /bin/sh': No such file or directory
+```
+
+This happens because the *execve* function treats the string as an argument of the *cat* command instead of invoking bash like the *system* function does.
+
+## Task 9:
+
+It is possible to write to the **/etc/zzz** file by adding the following line to the end of the program, after the *open* function:
+
+```c
+write(fd, "Malicious Data\n", 15);
+```
+
+This happens because the file is opened before the UID is set, so it's opened with root privileges, which include writing to the **zzz** file. Moving the setuid(getuid()) line to the section before opening the file avoids this problem.
+
 # Capture The Flag
 
 ## Resolução:

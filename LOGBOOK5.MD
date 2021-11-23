@@ -13,13 +13,10 @@ Both of the programs seem to work the same, no output errors and both successful
 - Created *badfile*, compiled using make and used gdb to debug the file stack-L1-dbg
 - Created a breakpoint in the function *bof*
 - Write *run* to start executing the program, followed by *next* to execute a few instructions and stop after the **ebp** register is modified to point to the stack.
-- Check **ebp** value using `p $ebp`: 0xffffcb98 -> 0xffffcfa8: 0xffffd1d8 
-- Check the variable **buffer** value using `p &buffer`: 0xffffcb2c: 0xf7fcb3e0
-- Substract the **ebp** address to the **buffer** address: 0x47c~
-- Insert the shellcode in the *exploit<span></span>.py* file
-- Exit the debug mode using `quit`
-
-mudar shellcode para shell code arq 32
-    - mudar start para algumas posições depois do return address (ver no gdb do executavel)
-    - mudar o offset para 112 
-
+- Check **ebp** value using `p $ebp`: 0xffffc978
+- Check the variable **buffer** value using `p &buffer`: 0xffffc90c
+- Run `x/100 0xffffc90c` to get the address
+- Insert the values in the `exploit.py` script
+- We gave `start` the value 200, a value big enough to fill the code with NOPs to reach the return address
+- We gave `ret` the address 0xffffc9cc, a value selected some registers after the return address to have room to execute the shell code
+- We gave `offset` the value 112 because its the register difference between the buffer and the str pointer, (100 + 8 + 4)

@@ -52,3 +52,30 @@
 
 ![Task 3.B screenshot 1](images/Lab3Task3StepB-1.png)
 ![Task 3.B screenshot 2](images/Lab3Task3StepB-2.png)
+
+# Capture The Flag
+
+## Challenge 1:
+
+- Downloaded the files provided for this CTF.
+- Executed the `checksec program` command to analyse the program compilation protections and noticed that the program addresses are static.
+- Analysed the *main.c* code and concluded that the program has a Format String Vulnerability in line 27, which is `printf(buffer)`. If this variable contains format specifiers, the *printf* call expects to find a suitable variable in its argument list, and in C language, variables are stored on the stack in process memory. By crafting format strings, attackers can read memory from arbitrary addresses.
+- Using gdb, we looked for the address of the global variable `flag`, which is 0x0804c060.
+- The first four bytes of our input will be that address, which will be put into the stack, and then we send the placeholder `%s` so that the program reads the value of that address from the stack and prints it.
+- Submit 1st flag ("**flag{f16ea691297da3fada3ff00f8878ec37}**")
+
+![CTF 6 Challenge 1](images/CTF6Challenge1.png)
+
+## Challenge 2:
+
+- Downloaded the files provided for the second challenge of this CTF.
+- Executed the `checksec program` command to analyse the program compilation protections, noticed that they are the same as challenge 1.
+- Analysed the *main.c* code and concluded that the program has a Format String Vulnerability in line 14, which is `printf(buffer)`. We also noticed that in order to access the flag, we must set the value of the variable `key` to *0xbeef*, which is equivalent to 48879 in decimal.
+- Using gdb, we looked for the address of the global variable `key`, which is 0x0804c034.
+- Then, we tried to find out the address where the first value is printed, by entering a string like "aaaa-%x-%x-%x" to the program executable and noticed that 61616161 (value of the first 4 bytes) is printed on the first %x, the position 1 of the stack.
+- Therefore, we must write the desired address as the first 4 bytes, adding 48875 bytes after (we subtracted the 4 bytes already written for the address), and then writing the `%n` into position 1 of the stack (the address of the target variable) in order to change its value to the number of bytes written before.
+- After this, the variable `key` has changed its value to 48879 (0xbeef), and we gained access to the shell, after activating the backdoor.
+- From there, we write the command `cat flag.txt` so we can see the contents of that file and get the flag of this challenge.
+- Submit 2nd flag ("**flag{1b7a9706be2a2725ded7e3d760c51841}**")
+
+![CTF 6 Challenge 2](images/CTF6Challenge2.png)

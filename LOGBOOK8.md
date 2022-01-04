@@ -64,6 +64,6 @@
     - make a speed report
 - The *ping* command is a linux utilitary.
 - This call is vulnerable since an attacker can gain access to the shell.
-- Entering the string `; cd ../../../..; find -name 'flag.txt' | cat flag.txt` in the Ping Host field, we manage to see
+- Entering the string `; cd /; find -name 'flag.txt' | cat flag.txt` in the Ping Host field, we manage to see
 the contents of the flag.txt file on the server.
 - Submit 2nd flag ("**flag{d06fce540d52821ea7f32acdfaf603ff}**")

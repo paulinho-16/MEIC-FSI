@@ -59,3 +59,29 @@
     - We were unable to launch an attack in the *Editor Mode*, given that it sanitizes the input of some characters, such as "<" or ">" signs, making Javascript insertion impossible.
 
 ![Task 4 screenshot](images/Lab5Task4.png)
+
+# Capture The Flag
+
+## Challenge 1:
+
+- Do a submission of an arbitrary justification and noticed that the page of the request has two buttons and one of them is called "Give the flag".
+- By analyzing the HTML code of the page, we conclude that this button id is "giveflag".
+- As the name says, the action of this button returns the flag of this challenge, so all we need to do is to click on it.
+- This can be done by injecting Javascript code by entering the following string in the justification field:
+```Javascript
+<script>document.getElementById("giveflag").click()<script>
+```
+- Submit 1st flag ("**flag{8620558bac7f21c09ec60e0bcafc2bb1}**")
+
+## Challenge 2:
+
+- Downloaded the files provided for this CTF.
+- Executed the `checksec program` command to analyse the program compilation protections and noticed the following characteristics:
+    - No RELRO
+    - No canary found
+    - NX disabled
+    - PIE enabled
+    - No RPATH
+    - No RUNPATH
+- The line 12 of the code has a vulnerability, since the function *gets* keeps reading the input until it founds a newline/EOF character, independentely of the size of the variable where the program stores that input.
+- 

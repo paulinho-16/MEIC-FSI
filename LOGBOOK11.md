@@ -1,23 +1,43 @@
 # Public-Key Infrastructure (PKI) Lab
 
-## Task1
+## Task 1
 
-After running the commands:
+- The first step is to prepare the configuration file. Start by copying it into the current directory, using the command:
+`cp /usr/lib/ssl/openssl.cnf ./openssl.cnf`
 
-```console
+Then, we must the directories declared in the section [CA_default], and uncomment the *unique_subject* line to allow creation of certifications with the same subject. For this, we use the following commands:
+
+```bash
+mkdir ./demoCA
+cd ./demoCA
+mkdir certs
+mkdir crl
+touch index.txt
+mkdir newcerts
+echo "1000" > serial
+```
+
+- Now, we must generate the self-signed certificate for the CA, by returning the parent directory and running the following command:
+
+`openssl req -x509 -newkey rsa:4096 -sha256 -days 3650 -keyout ca.key -out ca.crt -subj "/CN=www.modelCA.com/O=Model CA LTD./C=US" -passout pass:dees`
+
+This command already specifies the subject information and password, so that we will not be prompted for any additional information (notice that the password is "dees").
+
+- To look at the content of the X509 certificate and the RSA key, we can run the following commands:
+
+```bash
 openssl x509 -in ca.crt -text -noout
 openssl rsa -in ca.key -text -noout
 ```
 
-• What part of the certificate indicates this is a CA’s certificate?
-![Task 1 screenshot 1](images/Lab11Task1_1.png)
+- The basic constraint CA:TRUE, highlighted in the figure, proves that the certificate can be used as a CA.
+![Task 1 screenshot 1](images/Lab6Task1_1.png)
 
-• What part of the certificate indicates this is a self-signed certificate?
-![Task 1 screenshot 2](images/Lab11Task1_2.png)
-  
-• In the RSA algorithm, we have a public exponent e, a private exponent d, a modulus n, and two secret
-numbers p and q, such that n = pq. Please identify the values for these elements in your certificate
-and key files.
+- If the subject and issuer are the same, then this is a self-signed certificate. This is confirmed in the following figure:
+![Task 1 screenshot 2](images/Lab6Task1_2.png)
+
+- In the RSA algorithm, the values of the public exponent (e), private exponent (d), the modulus (n), and the two secrect numbers p and q, such that n = pq, are the following:
+
 ```
 publicExponent: 65537 (0x10001)
 ```
@@ -97,7 +117,7 @@ modulus:
     43:8f:a2:9e:2f:62:da:b1:e4:52:51:51:54:0b:53:
     59:b8:d1
 ```
-Secret Number p:
+
 ```
 prime1:
     00:f7:06:94:c2:57:31:5f:7c:60:ce:bb:03:dc:b6:
@@ -119,7 +139,7 @@ prime1:
     45:c1:da:fb:40:9f:90:9d:2a:98:b8:fa:55:8a:c6:
     6c:47
 ```
-Secret Number q:
+
 ```
 prime2:
     00:d5:b7:f0:23:32:df:c2:19:71:b1:35:d8:c1:f7:
@@ -142,14 +162,97 @@ prime2:
     f6:27
 ```
 
+## Task 2
 
-## Task2
+- To generate a CSR for our own server name (we defined it as www.m07g082021.com), we must run the following command:
 
-## Task3
+`openssl req -newkey rsa:2048 -sha256 -keyout server.key -out server.csr -subj "/CN=www.m07g082021.com/O=m07g08 Inc./C=US" -passout pass:dees -addext "subjectAltName = DNS:www.m07g082021.com, DNS:www.m07g082021A.com, DNS:www.m07g082021B.com"`
 
-## Task4
+Notice that we added some alternative names to our certificate signing request (www.m07g082021A.com and www.m07g082021B.com).
 
-## Task5
+- To see the decoded content of the CSR and private key files, we can run the following commands:
 
-## Task6
+```bash
+openssl req -in server.csr -text -noout
+openssl rsa -in server.key -text -noout
+```
+
+## Task 3
+
+- Now, we must turn the certificate signing request (server.csr) into an X509 certificate (server.crt), using the CA’s ca.crt and ca.key, by running the following command:
+
+`openssl ca -config openssl.cnf -policy policy_anything -md sha256 -days 3650 -in server.csr -out server.crt -batch -cert ca.crt -keyfile ca.key`
+
+- To allow the `openssl ca` command to copy the extension field from the request to the final certificate, we must uncomment the line that sets the variable copy_extensions.
+
+- To print out the decoded content of the certificate, we can run the following command:
+
+`openssl x509 -in server.crt -text -noout`
+
+Notice that the alternative names are included:
+
+![Task 3 screenshot](images/Lab6Task3.png)
+
+## Task 4
+
+- First, we need to create a configuration file for our own server. For that, we check the contents od the file `bank32_apache_ssl.conf` using the command:
+
+`docker exec 77 cat /etc/apache2/sites-available/bank32_apache_ssl.conf`
+
+Then, we created a new file `temporary.conf`, copied the contents of the file in the container, and updated them so that its content is:
+
+```xml
+<VirtualHost *:443> 
+    DocumentRoot /var/www/m07g08
+    ServerName www.m07g082021.com
+    ServerAlias www.m07g082021A.com
+    ServerAlias www.m07g082021B.com
+    ServerAlias www.m07g08W.com
+    DirectoryIndex index.html
+    SSLEngine On
+    SSLCertificateFile server.crt
+    SSLCertificateKeyFile server.key
+</VirtualHost>
+
+<VirtualHost *:80>
+    DocumentRoot /var/www/m07g08
+    ServerName www.m07g08.com
+    DirectoryIndex index_red.html
+</VirtualHost>
+
+# Set the following gloal entry to suppress an annoying warning message
+ServerName localhost
+```
+
+- Now we copy this to the new file in the container, using the command:
+
+`docker cp temporary.conf 77:/etc/apache2/sites-available/m07g082021_apache_ssl.conf`
+
+- Using the command `docksh 77`, we are able to run commands in the container.
+- Run the following commands to enable Apache SSL module and enable the site:
+
+```bash
+a2enmod ssl
+a2ensite m07g082021_apache_ssl
+```
+
+- Finally, start the Apache server using the command:
+
+`service apache2 start`
+
+- After that, we changed the index.html file located in /var/www/html/index.html, using the following command:
+
+`echo "Hello from our server" > /var/www/html/index.html`
+
+We are able to see that the site is working properly.
+
+![Task 4 screenshot](images/Lab6Task4_1.png)
+
+- However, by putting https at the beginning of our URL, we get a warning telling that there is a potential security risk. This occurs because even though we have already created the certificated, it is not trusted by the browser since it is a self-signed certificate. Therefore we must add our certificate to the Firefox browser by clicking the *View Certificates* button on the page.
+
+// TODO: Terminar isto
+
+## Task 5
+
+## Task 6
 

@@ -2,7 +2,7 @@
 
 ## Task 1
 
-Both of the programs seem to work the same, no output errors and both successfully run shell command
+Both of the programs seem to work the same, with no output errors and both successfully run shell command.
 
 ## Task 2
 

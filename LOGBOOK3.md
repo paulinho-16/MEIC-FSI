@@ -1,6 +1,6 @@
 # CVE-2021-41773
 
-**Identification** : This flaw gives an attacker permission to map URLs to files outside protected directories (path traversal attack), and possibly allowing remote code execution. Can be exploited in Apache servers version 2.4.49.
+**Identification** : This flaw gives an attacker permission to map URLs to files outside protected directories (path traversal attack), and possibly allows remote code execution. Can be exploited in Apache servers version 2.4.49.
 
 
 **Cataloguing**:

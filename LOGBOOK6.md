@@ -6,7 +6,7 @@
 - Access shell by running docksh with the initial digits of the container: `docksh 93`
 - Run the command `echo hello | nc 10.9.0.5 9090` and see the prints in the shell where the container is running, including the smiley faces.
 - Run the `build_string.py` script, which will generate 1500 bytes and write them to the file `badfile`
-- Run the command `cat badfile | nc 10.9.0.5 9090` and notice that the smiley faces don't apear in the shell running the containers, which means that the server crashed. This happened because the string written to the `badfile` contained the bytes `%.8x` (could be `%s` instead, for example), which makes the program look for an address that doesn't exist.
+- Run the command `cat badfile | nc 10.9.0.5 9090` and notice that the smiley faces don't appear in the shell running the containers, which means that the server crashed. This happened because the string written to the `badfile` contained the bytes `%.8x` (could be `%s` instead, for example), which makes the program look for an address that doesn't exist.
 
 ## Task 2
 
@@ -25,7 +25,7 @@
 - Run the command `echo hello | nc 10.9.0.5 9090` to see the printed information about the secret message address, which is 0x080b4008.
 - In the python script, enter that address in the first positions of the `content` variable and print many `%x` to find out the position of the secret message address.
 - After finding it out, place a `%s` in the spot of the secret message address.
-- After the values of the `%x`, the message "A secret message" is printed to the screen.
+- After the values of the `%x`, the message "A secret message" is printed on the screen.
 
 ![Task 2.B screenshot 1](images/Lab3Task2StepB-1.png)
 ![Task 2.B screenshot 2](images/Lab3Task2StepB-2.png)

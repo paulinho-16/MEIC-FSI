@@ -81,10 +81,8 @@ This happens because the file is opened before the UID is set, so it's opened wi
 
 # Capture The Flag
 
-## Resolução:
-
-- Gather information from navigating in the website and discovered the the versions of Wordpress and its plugins in [this page](http://ctf-fsi.fe.up.pt:5001/product/wordpress-hosting/) in the "informação adicional" tab
-- Proceeded to search known vulnerabilities present in Wordpress and Plugins versions discovered. Using the tool searchsploit we found a vulnerability in Booster for WooCommerce plugin, whose identifier is CVE-2021-34646, that allowed us to authenticate as a sepecific user without permission
+- Gather information from navigating in the website and discovered the versions of Wordpress and its plugins in [this page](http://ctf-fsi.fe.up.pt:5001/product/wordpress-hosting/) in the "informação adicional" tab
+- Proceeded to search known vulnerabilities present in Wordpress and Plugins versions discovered. Using the tool searchsploit we found a vulnerability in Booster for WooCommerce plugin, whose identifier is CVE-2021-34646, that allowed us to authenticate as a specific user without permission
 - Submit 1st flag ("**flag{CVE-2021-34646}**")
 - Search for an exploit to be applied to this vulnerability, using the tool searchsploit we managed to use the exploit whose path is /usr/share/exploit-db/exploits/php/webapps/50299.py
 - Using the link https://ctf.fe.up.pt:5001/wp-json/wp/v2/users/ we saw that the admin account had ID = 1, to be used in the exploit execution.

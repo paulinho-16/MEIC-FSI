@@ -5,7 +5,7 @@
 - The first step is to prepare the configuration file. Start by copying it into the current directory, using the command:
 `cp /usr/lib/ssl/openssl.cnf ./openssl.cnf`
 
-Then, we must the directories declared in the section [CA_default], and uncomment the *unique_subject* line to allow creation of certifications with the same subject. For this, we use the following commands:
+Then, we must the directories declared in the section [CA_default], and uncomment the *unique_subject* line to allow the creation of certifications with the same subject. For this, we use the following commands:
 
 ```bash
 mkdir ./demoCA
@@ -36,7 +36,7 @@ openssl rsa -in ca.key -text -noout
 - If the subject and issuer are the same, then this is a self-signed certificate. This is confirmed in the following figure:
 ![Task 1 screenshot 2](images/Lab6Task1_2.png)
 
-- In the RSA algorithm, the values of the public exponent (e), private exponent (d), the modulus (n), and the two secrect numbers p and q, such that n = pq, are the following:
+- In the RSA algorithm, the values of the public exponent (e), private exponent (d), the modulus (n), and the two secret numbers p and q, such that n = pq, are the following:
 
 ```
 publicExponent: 65537 (0x10001)
@@ -195,11 +195,11 @@ Notice that the alternative names are included:
 
 ## Task 4
 
-- First, we need to create a configuration file for our own server. For that, we check the contents od the file `bank32_apache_ssl.conf` using the command:
+- First, we need to create a configuration file for our own server. For that, we check the contents of the file `bank32_apache_ssl.conf` using the command:
 
 `docker exec 77 cat /etc/apache2/sites-available/bank32_apache_ssl.conf`
 
-Then, we created a new file `temporary.conf`, copied the contents of the file in the container, and updated them so that its content is:
+Then, we created a new file `m07g082021_apache_ssl.conf`, copied the contents of the file in the container, and updated them so that its content is:
 
 ```xml
 <VirtualHost *:443> 
@@ -209,32 +209,43 @@ Then, we created a new file `temporary.conf`, copied the contents of the file in
     ServerAlias www.m07g082021B.com
     ServerAlias www.m07g08W.com
     DirectoryIndex index.html
-    SSLEngine On
-    SSLCertificateFile server.crt
-    SSLCertificateKeyFile server.key
+    SSLEngine On 
+    SSLCertificateFile /certs/server.crt
+    SSLCertificateKeyFile /certs/server.key
 </VirtualHost>
 
-<VirtualHost *:80>
+<VirtualHost *:80> 
     DocumentRoot /var/www/m07g08
     ServerName www.m07g08.com
     DirectoryIndex index_red.html
 </VirtualHost>
 
-# Set the following gloal entry to suppress an annoying warning message
 ServerName localhost
 ```
 
-- Now we copy this to the new file in the container, using the command:
+- Now we modify the Dockerfile in order to use the certificates to our own server, so its content is:
 
-`docker cp temporary.conf 77:/etc/apache2/sites-available/m07g082021_apache_ssl.conf`
+```dockerfile
+FROM handsonsecurity/seed-server:apache-php
+
+ARG WWWDIR=/var/www/m07g08
+
+COPY ./index.html ./index_red.html $WWWDIR/
+COPY ./bank32_apache_ssl.conf /etc/apache2/sites-available
+COPY ./m07g082021_apache_ssl.conf /etc/apache2/sites-available
+COPY ./certs/server.crt ./certs/server.key  /certs/
+
+RUN  chmod 400 /certs/server.key \
+     && chmod 400 /certs/server.crt \
+     && chmod 644 $WWWDIR/index.html \
+     && chmod 644 $WWWDIR/index_red.html \
+     && a2enmod ssl \
+     && a2ensite m07g082021_apache_ssl
+
+CMD  tail -f /dev/null
+```
 
 - Using the command `docksh 77`, we are able to run commands in the container.
-- Run the following commands to enable Apache SSL module and enable the site:
-
-```bash
-a2enmod ssl
-a2ensite m07g082021_apache_ssl
-```
 
 - Finally, start the Apache server using the command:
 
@@ -246,13 +257,51 @@ a2ensite m07g082021_apache_ssl
 
 We are able to see that the site is working properly.
 
-![Task 4 screenshot](images/Lab6Task4_1.png)
+![Task 4 screenshot 1](images/Lab6Task4_1.png)
 
-- However, by putting https at the beginning of our URL, we get a warning telling that there is a potential security risk. This occurs because even though we have already created the certificated, it is not trusted by the browser since it is a self-signed certificate. Therefore we must add our certificate to the Firefox browser by clicking the *View Certificates* button on the page.
+- However, by putting https at the beginning of our URL, we get a warning telling that there is a potential security risk. This occurs because even though we have already created the certificated, it is not trusted by the browser since it is a self-signed certificate. Therefore we must add our certificate to the Firefox browser by clicking the *View Certificates* button on the page, and importing the ca.crt certificate, which is the issuer of the certificate of our own server. As you can see in the following figure, we managed to access our HTTPS server. Note: We used the index.html provided for the bank32 site.
 
-// TODO: Terminar isto
+![Task 4 screenshot 2](images/Lab6Task4_2.png)
 
 ## Task 5
 
+- To impersonate the website www.facebook.com, we created the following new VirtualHost entry to Apache’s SSL configuration file:
+
+```xml
+<VirtualHost *:443> 
+    DocumentRoot /var/www/m07g08
+    ServerName www.facebook.com
+    DirectoryIndex index.html
+    SSLEngine On 
+    SSLCertificateFile /certs/server.crt
+    SSLCertificateKeyFile /certs/server.key
+</VirtualHost>
+```
+
+- Afterwards, we changed the `/etc/hosts` file by running the command `sudo nano /etc/hosts` and added the line `10.9.0.80 www.facebook.com`.
+
+- Now, we visit the target real website (www.facebook.com) and see a message saying that there is a potential security issue. This is because the certificate that we used was not assigned to the Facebook website since it was assigned to the `www.m07g082021.com` address.
+
+![Task 5 screenshot](images/Lab6Task5.png)
+
 ## Task 6
 
+- In order to visit the https Facebook site in a way that the browser will not raise any suspicion when the victim tries to visit it, we need to generate a new certificate request to the Facebook address, by running the following command:
+
+`openssl req -newkey rsa:2048 -sha256 -keyout server2.key -out facebook.csr -subj "/CN=www.facebook.com/O=Facebook Inc./C=US" -passout pass:dees`
+
+- The next step is to turn the certificate signing request (facebook.csr) into an X509 certificate (facebook.crt), using the CA's ca.crt and ca.key, by running the following command:
+
+`openssl ca -config openssl.cnf -policy policy_anything -md sha256 -days 3650 -in facebook.csr -out facebook.crt -batch -cert ca.crt -keyfile ca.key`
+
+- Now, we must edit the Dockerfile so that it includes the lines:
+
+```dockerfile
+COPY ./certs/facebook.crt ./certs/facebook.key  /certs/
+RUN chmod 400 /certs/facebook.crt
+RUN chmod 400 /certs/facebook.key
+```
+
+- After changing the config file to associate this new certificate to the Facebook entry, we are now able to access the Facebook site and see the content of our website, which means that the MITM attack was successful.
+
+![Task 6 screenshot](images/Lab6Task6.png)
